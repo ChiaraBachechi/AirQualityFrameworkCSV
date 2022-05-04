@@ -1,0 +1,16 @@
+argparse v1.1
+ast
+os
+sys
+numpy v1.19.5
+pandas v1.1.5
+psycopg2 2.8.6 (dt dec pq3 ext lo64)
+dill v0.3.3
+tensorflow v2.6.0
+json v2.0.9
+time
+datetime
+glob
+sklearn 0.23.2
+matplotlib
+calendar
