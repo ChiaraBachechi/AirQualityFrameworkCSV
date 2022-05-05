@@ -10,7 +10,7 @@ import sklearn
 import matplotlib.pyplot as plt
 import json
 import datetime  # this is to pring the current time during the run
-#import keras
+import keras
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from sklearn.metrics import mean_squared_error, accuracy_score

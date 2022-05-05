@@ -58,6 +58,8 @@ class CalibrationAlgorithmFramework():
       self.algorithm_parameters = (info['algorithm_parameters'] if 'algorithm_parameters' in info else {})
       self.dill_file_name=info["dill_file_name"]
       self.units_of_measure = info['units_of_measure']
+      self.csv_feature_data = info['csv_feature_data']
+      self.csv_target_data = info['csv_target_data']
       
     def getStatus(self):
         status={}
@@ -524,11 +526,11 @@ class CalibrationAlgorithmFramework():
     la soluzione più veloce a cui abbia pensato.
     """
     def loadDatasetFromCSV(self):
-        print("Campionamento dataset")
-        with open(os.path.join(self.id_sensor, '_not-filtered_raw.csv'), 'r') as csv_file:
+        with open('../data/' + self.csv_feature_data, 'r') as csv_file:
             df1 = pd.read_csv(csv_file)
-        df1 = df1[self.features]
-        with open(os.path.join(self.id_sensor, '_not-filtered_legalStation.csv'), 'r') as csv_file:
+        print(self.features)
+        #df1 = df1[self.features.append('phenomenon_time')]
+        with open('../data/' + self.csv_target_data, 'r') as csv_file:
             df2 = pd.read_csv(csv_file)
         df2 = df2[['phenomenon_time', 'id_aq_legal_station', str(self.pollutant_label)]]
         # converto per fare il resample
@@ -562,7 +564,7 @@ class CalibrationAlgorithmFramework():
            os.remove(file)
         return data
 
-    def createTrainingAndTestingDBFromCSV(self):
+    def createTrainingAndTestingFromCSV(self):
         df_trainig_and_testing = self.loadDatasetFromCSV()
 
         self.df_testAndTraining['train_features'] = df_trainig_and_testing[self.features]
@@ -572,6 +574,7 @@ class CalibrationAlgorithmFramework():
         # print(" -- tmp_label_list: " + str(tmp_label_list));
         self.df_testAndTraining['train_labels'] = df_trainig_and_testing[self.pollutant_label]
         # self.df_testAndTraining['train_labels'] = self.label_list;
+        print(self.df_testAndTraining['train_features'])
         return self.df_testAndTraining
     def createTrainingAndTestingDBAnomalyDetection(self):
         """
