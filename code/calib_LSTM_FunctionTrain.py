@@ -1,10 +1,13 @@
 import os
 import tensorflow 
-
+from tensorflow.random import set_seed
+set_seed(2)
 import datetime
 import pandas as pd
 import dill
 import numpy as np
+from numpy.random import seed
+seed(1)
 import psycopg2
 import sklearn
 import matplotlib.pyplot as plt
@@ -194,9 +197,24 @@ def split_calib_data(X,n_steps,freq_sampling, feat_list):
     X= X.drop(['phenomenon_time','number_of_previous_observations'], axis=1)
     return X
 
-def calibration_lstm_all(info_dictionary,X,y):
-
+def calibration_lstm_all(info_dictionary,X,y,validation = False):
     number_of_previous_observations=info_dictionary['number_of_previous_observations']
+    algorithm_parameters  = info_dictionary['algorithm_parameters']
+    if 'learning_rate' not in algorithm_parameters.keys():
+        learning_rate = 0.005
+        info_dictionary['algorithm_parameters']['learning_rate']=0.005
+    else:
+        learning_rate = algorithm_parameters['learning_rate']
+    if 'epochs' not in algorithm_parameters.keys():
+        epochs = 200
+        info_dictionary['algorithm_parameters']['epochs']=200
+    else:
+        epochs = algorithm_parameters['epochs']
+    if 'batch' not in algorithm_parameters.keys():
+        batch = 32
+        info_dictionary['algorithm_parameters']['batch']=32
+    else:
+        batch = algorithm_parameters['batch']
     freq=info_dictionary['interval']
     #id_sensor=info_dictionary['id_sensor']
     feat_list=info_dictionary['feat_order']
@@ -210,8 +228,8 @@ def calibration_lstm_all(info_dictionary,X,y):
     X=scaler_feat.fit_transform(X)
     X=X.reshape(X.shape[0],number_of_previous_observations+1,n_features)
     y=scaler_pollutant.fit_transform(np.array(y).reshape(-1,1))
-
-    X_train, X_val, y_train,y_val =train_test_split(X,y,test_size=0.2,shuffle=True)
+    X_train = X
+    y_train = y
     n_neurons = np.floor(X_train.shape[0] / (2 * (X_train.shape[1] + 1)))
 
     model = Sequential()
@@ -230,46 +248,50 @@ def calibration_lstm_all(info_dictionary,X,y):
     model.add(Dropout(0.1))
     model.add(Dense(1))
     
-    model.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate=0.005),loss='mean_squared_error')
+    model.compile(optimizer=tensorflow.keras.optimizers.Adam(learning_rate= learning_rate),loss='mean_squared_error')
 
     # Fitting to the training set
-    history = model.fit(X_train, y_train, epochs=200, validation_data=(X_val,y_val),batch_size=32)
-    plt.plot(history.history['loss'])
-    plt.plot(history.history['val_loss'])
-    plt.title('model train vs validation loss')
-    plt.ylabel('loss')
-    plt.xlabel('epoch')
-    plt.legend(['train', 'validation'], loc='upper right')
-    plt.savefig('../results/' + info_dictionary["dill_file_name"] + "_loss.png")
-    prediction=model.predict(X_val)
-    rmse=np.sqrt(mean_squared_error(y_val,prediction))
+    #history = model.fit(X_train, y_train, epochs=200, validation_data=(X_val,y_val),batch_size=32)
+    history = model.fit(X_train, y_train, epochs = epochs,batch_size= batch,shuffle=False)
+    if(validation):
+        history = model.fit(X_train, y_train, epochs = epochs, validation_split=0.1,batch_size= batch)
+        print(history.history.keys())
+        plt.plot(history.history['loss'])
+        plt.plot(history.history['val_loss'])
+        plt.title('model train vs validation loss')
+        plt.ylabel('loss')
+        plt.xlabel('epoch')
+        plt.legend(['train', 'validation'], loc='upper right')
+        plt.savefig('../results/' + info_dictionary["dill_file_name"] + "_loss.png")
+       #prediction=model.predict(X_val)
+       #rmse=np.sqrt(mean_squared_error(y_val,prediction))
 
-    if info_dictionary["pollutant_label"] == "o3":
-        class_pred = range_EEA_O3(prediction)
-        class_test = range_EEA_O3(y_val)
-    elif info_dictionary["pollutant_label"] == "co":
-        class_pred = range_EEA_CO(prediction)
-        class_test = range_EEA_CO(y_val)
-    else:
-        class_pred = range_EEA_NOx(prediction)
-        class_test = range_EEA_NOx(y_val)
+       #if info_dictionary["pollutant_label"] == "o3":
+       #    class_pred = range_EEA_O3(prediction)
+       #    class_test = range_EEA_O3(y_val)
+       #elif info_dictionary["pollutant_label"] == "co":
+       #    class_pred = range_EEA_CO(prediction)
+       #    class_test = range_EEA_CO(y_val)
+       #else:
+       #    class_pred = range_EEA_NOx(prediction)
+       #    class_test = range_EEA_NOx(y_val)
 
-    acc_EEA = accuracy_score(class_pred, class_test)
-    info_dictionary["accuracy_EEA"]=acc_EEA
-    info_dictionary["RMSE"] = rmse
+       #acc_EEA = accuracy_score(class_pred, class_test)
+       #info_dictionary["accuracy_EEA"]=acc_EEA
+       #info_dictionary["RMSE"] = rmse
 
-    if info_dictionary["pollutant_label"] == "o3":
-        class_pred = range_ARPA_O3(prediction)
-        class_test = range_ARPA_O3(y_val)
-    elif info_dictionary["pollutant_label"] == "co":
-        class_pred = range_ARPA_CO(prediction)
-        class_test = range_ARPA_CO(y_val)
-    else:
-        class_pred = range_ARPA_NOx(prediction)
-        class_test = range_ARPA_NOx(y_val)
+       #if info_dictionary["pollutant_label"] == "o3":
+       #    class_pred = range_ARPA_O3(prediction)
+       #    class_test = range_ARPA_O3(y_val)
+       #elif info_dictionary["pollutant_label"] == "co":
+       #    class_pred = range_ARPA_CO(prediction)
+       #    class_test = range_ARPA_CO(y_val)
+       #else:
+       #    class_pred = range_ARPA_NOx(prediction)
+       #    class_test = range_ARPA_NOx(y_val)
 
-    acc_ARPA = accuracy_score(class_pred, class_test)
-    info_dictionary["accuracy_ARPA"]=acc_ARPA
+       #acc_ARPA = accuracy_score(class_pred, class_test)
+       #info_dictionary["accuracy_ARPA"]=acc_ARPA
 
     info_dictionary["hyper_parameters"]={"number_of_neurons":n_neurons}
     return model, scaler_feat,scaler_pollutant

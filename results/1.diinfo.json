@@ -1,4 +1,7 @@
 {
+  "RMSE": 0.171307420296185,
+  "accuracy_ARPA": 1.0,
+  "accuracy_EEA": 1.0,
   "algorithm_parameters": {},
   "csv_feature_data": "input_raw.csv",
   "csv_target_data": "input_target.csv",
@@ -28,7 +31,7 @@
     }
   },
   "hyper_parameters": {
-    "number_of_neurons": 14.0
+    "number_of_neurons": 11.0
   },
   "id_sensor": "4011",
   "interval": "10T",
