@@ -123,7 +123,7 @@ def main(args=None):
     ##
     action = options.action
     #
-    #
+    #FUNZIONA
     if (action == "trainAndSaveDillToFile"):
         #
         #
@@ -154,7 +154,7 @@ def main(args=None):
             dill.dump(calibrator, dill_file)
 
     #
-    #
+    #DA SISTEMARE
     elif (action == "trainAndSaveDillToFileFromInfo"):
         #
         #
@@ -211,38 +211,7 @@ def main(args=None):
         if (options.df_csv_file_prefix != ""):
             framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
         #
-        #
-    elif (action == "trainAndSaveDillToFileFromInfoAndDf"):
-        #
-        #
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        with open(options.info_file_name, 'r') as f:
-            info = json.load(f)
-        framework.initFromInfo(info)
-        framework.createTrainingAndTestingDB()
-        framework.trainCalibrator()
-        calibrator = framework.getCalibrator()
-        #
-        print(" --- calibrations info:\n",
-              json.dumps(calibrator.get_info(), sort_keys=True, indent=2))
-        #
-        with open(options.dill_file_name, 'wb') as dill_file:
-            dill.dump(calibrator, dill_file)
-        print("\n dill calibrator saved as " + options.dill_file_name + "\n")
-        if (options.df_csv_file_prefix != ""):
-            framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
-        #
-        print(" ----- testing features ")
-        print(str(framework.get_df_test_features()))
-        print(" ----- expected labels ")
-        print(str(framework.get_df_test_labels()))
-        print(" ----- output ")
-        t = time.time()
-        print(str(calibrator.apply_df(framework.get_df_test_features())))
-        print(" --- time: " + str(time.time() - t))
-        #
-    #
-    #
+    #FUNZIONA
     elif (action == "getInfoFromDillFile"):
         #
         #
@@ -263,107 +232,6 @@ def main(args=None):
         #  print(json.dumps(json.loads(calibrator.get_json), sort_keys=True, indent=2))
     #
     #
-    #
-    elif (action == "saveTrainingAndTestingDataToCsv"):
-        #
-        #
-        """ example
-         python3 main.py \
-           --id_sensor 4003 \
-           --begin_time "2019-08-01 00:00:00" \
-           --end_time   "2019-08-20 00:00:00" \
-           --feature_list "no_we-no_aux" \
-           --label_list "no-o3" \
-           --pollutant_label "no" \
-           --df_csv_file_prefix "data/df_csv" \
-           --action saveTrainingAndTestingDataToCsv
-        """
-        # variable check
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        framework.initFromInfo(optionsToInfo(options))
-        framework.createTrainingAndTestingDB()
-        framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
-        #
-        # save to file of the dataset
-    #
-    #
-    #
-    # elif(action == "testDill_fromFileAndCsv_simple"):
-    # #
-    # #
-    #   """ example
-    #    python3 main.py \
-    #      --dill_file_name tmp_calibrator.dill \
-    #      --df_csv_file_prefix "data/tmp_calibrator" \
-    #      --action testDill_fromFileAndCsv_simple
-    #   """
-    #   with open(options.dill_file_name, 'rb') as dill_file:
-    #     calibrator = dill.load(dill_file)
-    #   info=json.loads(calibrator.get_json)
-    #   info["pollutant_label"]="no"
-    #   info["interval"]="10T"
-    #   info["test_size"]=20
-    #   #
-    #   framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-    #   framework.initFromInfo(info)
-    #   framework.loadTrainingAndTestingDataFromCsv(options.df_csv_file_prefix)
-    #   #
-    #   # save to file of the dataset
-    #   # framework.saveTrainingAndTestingDataToCsv("trash_")
-    #   df_features=framework.get_df_test_features()
-    #   df_labels=framework.get_df_test_labels()
-    #   #print(str(df_features)
-    #   #print(str(df_labels)
-    #   #
-    #   rv = None
-    #   full_features_list=[ 'no_aux', 'no_we','no2_aux', 'no2_we','ox_aux', 'ox_we', 'co_aux', 'co_we','humidity','temperature']
-    #   #to exclude values that are not in the range
-    #   for i in range (0, df_features.shape[0]):
-    #     f=df_features.iloc[i]
-    #     l=df_labels.iloc[i]
-    #     #print("f: " + str(f))
-    #     #print("l:" + str(l))
-    #     input_np=np.zeros([1,10])
-    #     for c in df_features.columns:
-    #       input_np[0,full_features_list.index(c)] = f[c]
-    #       #print("c: ",c," f[c]:, ",f[c],"")
-    #     rv = calibrator.apply_np(input_np)[0]
-    #     #
-    #     print("label: [",l[0],"] rv: [",rv,"]")
-    #     #
-    #
-    #
-    elif action == "saveTrainingDataToCsv":
-        """ example
-         python3 main.py \
-           --id_sensor 4003 \
-           --begin_time "2019-08-01 00:00:00" \
-           --end_time   "2019-08-20 00:00:00" \
-           --feature_list "no_we-no_aux" \
-           --label_list "no-o3" \
-           --pollutant_label "no" \
-           --df_csv_file_prefix "" \
-           --action saveTrainingDataToCsv
-        """
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        framework.initFromInfo(optionsToInfo(options))
-        framework.createTrainingDB()
-        framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
-    elif action == "saveDatasetToCsv":
-        """ example
-         python3 main.py \
-           --id_sensor 4003 \
-           --begin_time "2019-08-01 00:00:00" \
-           --end_time   "2019-08-20 00:00:00" \
-           --feature_list "no_we-no_aux" \
-           --label_list "no-o3" \
-           --pollutant_label "no" \
-           --df_csv_file_prefix "" \
-           --action saveDatasetToCsv
-        """
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        framework.initFromInfo(optionsToInfo(options))
-        framework.createAndSaveDataCleaningDB(options.df_csv_file_prefix)
     elif (action == "applyCalibrationSensorPollutantDillDf"):
         #
         #
@@ -430,7 +298,7 @@ def main(args=None):
     elif (action == "trainToDB"):
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
         framework.initFromInfo(optionsToInfo(options))
-        strnote = '';
+        strnote = ''
         if(options.anomaly):
             framework.createTrainingAndTestingDB(True)
             strnote = 'excluding anomalies'
@@ -559,71 +427,8 @@ def main(args=None):
 
         prediction['coverage']=prediction.pop('coverage')
         frameApply.insertPredictionToDB(prediction)
-    elif (action == "ApplyDillsToSensorRepaired"):
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        frameApply = calibrationApplyFramework.CalibrationApplyFramework()
-        row = frameApply.getSensorCalibration(options.id_calibration)
-        print(row)
-        pollutants = ['no','no2','co','o3']
-        prediction = pd.DataFrame()
-
-        prediction['phenomenon_time']=pd.date_range(start=options.begin_time, end=options.end_time,
-                                                    freq=options.interval)
-
-        prediction['result_time']=str(datetime.datetime.now()).split('.')[0]
-        prediction.insert(loc=0,column='id_sensor_calibration',value=row['id'])
-
-        for p in pollutants:
-            if(row[p]):
-                name_dill=str(row['sensor'])+'_'+p+'_'+str(row[p])+'.dill'
-                calibrator,path_dill=frameApply.openDill(row[p],name_dill)
-                if(not calibrator):
-                    prediction[p]=0
-                    continue
-
-                begin_time=options.begin_time
-                if ('number_of_previous_observations' in calibrator.info_dictionary):
-                    begin_time = datetime.datetime.strptime(options.begin_time, '%Y-%m-%d %H:%M:%S')
-                    time_diff = int(options.interval[:-1]) * (
-                                calibrator.info_dictionary["number_of_previous_observations"] + 1)
-                    if options.interval[-1:] == 'T':
-                        begin_time = begin_time - datetime.timedelta(minutes=time_diff)
-                    else:
-                        begin_time = begin_time - datetime.timedelta(hours=time_diff)
-                    begin_time = str(begin_time)
-
-                prediction = prediction.merge(frameApply.applyCalibrationDillDfRepaired(calibrator
-                                                                 , begin_time
-                                                                 , options.end_time
-                                                                 , options.id_sensor
-                                                                 , framework.getIntervalInMinutesFromString(options.interval)
-                                                                 , p
-                                                                 ,
-                                                                 True if (
-                                                                             options.do_persist_data.lower() == "true") else False
-                                                                 ,path_dill
-                                                                 , options.anomaly),
-
-
-                                      how='left', on='phenomenon_time',suffixes=('','_DROPME'))
-            else:
-                prediction[p]=0
-        to_drop = [x for x in prediction if x.endswith('_DROPME')]
-        prediction.drop(to_drop,axis=1,inplace=True)
-
-        prediction['co_out_of_range'] = False
-        prediction['no_out_of_range'] = False
-        prediction['no2_out_of_range'] = False
-        prediction['o3_out_of_range'] = False
-
-        sensor_feat=frameApply.getSensorFeat(options.id_sensor,options.end_time)
-        sensor_feat['datetime']=pd.to_datetime(sensor_feat['datetime'])
-        prediction['id_sensor_low_cost_feature'] = prediction['phenomenon_time'].apply(lambda x:
-                                                                                       int(sensor_feat[sensor_feat['datetime']<x]['id_sensor_low_cost_feature'][-1:]))
-
-        prediction['coverage']=prediction.pop('coverage')
-        frameApply.insertPredictionToDB(prediction)
-        return
+    
+    return
 
 
 
