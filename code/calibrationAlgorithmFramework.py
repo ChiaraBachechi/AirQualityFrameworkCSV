@@ -48,7 +48,7 @@ class CalibrationAlgorithmFramework():
       self.end_time = info["dates"]["end"]
       self.id_sensor = info["id_sensor"]
       self.features = info["feat_order"]
-      self.label_list = (info['label_list'] if 'label_list' in info else [ info['pollutant_label'] ])
+      self.target_label = info['target_label']
       self.trainer_module_name = info["trainer_module_name"]
       self.trainer_class_name = info["trainer_class_name"]
       self.test_size          = info['test_size']
@@ -60,6 +60,7 @@ class CalibrationAlgorithmFramework():
       self.units_of_measure = info['units_of_measure']
       self.csv_feature_data = info['csv_feature_data']
       self.csv_target_data = info['csv_target_data']
+      self.label_list = info['label_list']
       
     def getStatus(self):
         status={}
@@ -67,6 +68,9 @@ class CalibrationAlgorithmFramework():
         status['id_sensor']=self.id_sensor
         status['feat_order']=self.features
         status['label_list']=self.label_list
+        status['target_label']=self.target_label
+        status['csv_feature_data']=self.csv_feature_data
+        status['csv_target_data'] = self.csv_target_data
         status['trainer_module_name']=self.trainer_module_name
         status['trainer_class_name']=self.trainer_class_name
         status['interval']=self.interval
@@ -85,15 +89,15 @@ class CalibrationAlgorithmFramework():
       return(self.conn)
       
     def get_df_train_features(self):
-        train_features = self.df_testAndTraining['train_features'];
+        train_features = self.df_testAndTraining['train_features']
         return (train_features)
     def get_df_train_labels(self):
-        train_labels = self.df_testAndTraining['train_labels'];
+        train_labels = self.df_testAndTraining['train_labels']
         return (train_labels)
     def get_df_test_features(self):
         rv = None
         if 'test_features' in self.df_testAndTraining:
-            rv = self.df_testAndTraining['test_features'];
+            rv = self.df_testAndTraining['test_features']
         return (rv)
     def get_df_test_labels(self):
         test_labels = self.df_testAndTraining['test_labels'];
@@ -231,7 +235,7 @@ class CalibrationAlgorithmFramework():
             label_name = 'label_'+str(pollutant_label)
             a=0
             check=df_trainig_and_testing[label_name]
-            cur = conn.cursor()
+            #cur = conn.cursor()
             for current, next in zip(check, check[1:]): # this loop removes constant values.
                 if current==next:
                     check[a]=np.nan
@@ -239,7 +243,7 @@ class CalibrationAlgorithmFramework():
             check=[float('nan') if x<cutoff_Value else x for x in check]
             df_trainig_and_testing[label_name]=check.copy()
             df_trainig_and_testing.dropna(inplace=True)
-            cur.close()
+            #cur.close()
         return(df_trainig_and_testing)
         
     def createTrainingAndTestingDBRepairing(self):
@@ -528,11 +532,10 @@ class CalibrationAlgorithmFramework():
     def loadDatasetFromCSV(self):
         with open('../data/' + self.csv_feature_data, 'r') as csv_file:
             df1 = pd.read_csv(csv_file)
-        print(self.features)
-        #df1 = df1[self.features.append('phenomenon_time')]
+        df1 = df1[self.features + ['phenomenon_time','id_aq_legal_station']]
         with open('../data/' + self.csv_target_data, 'r') as csv_file:
             df2 = pd.read_csv(csv_file)
-        df2 = df2[['phenomenon_time', 'id_aq_legal_station', str(self.pollutant_label)]]
+        df2 = df2[['phenomenon_time', 'id_aq_legal_station', str(self.target_label)]]
         # converto per fare il resample
         df1['phenomenon_time'] = pd.to_datetime(df1['phenomenon_time'])
         df2['phenomenon_time'] = pd.to_datetime(df2['phenomenon_time'])
@@ -540,26 +543,36 @@ class CalibrationAlgorithmFramework():
 
         df1 = df1.dropna()
         df2 = df2.dropna()
-        df2 = df2[df2[self.pollutant_label] > 0.1]
-
-        df1 = df1.resample(str(self.interval), on='phenomenon_time', label='right').mean()
+        df2 = df2[df2[self.target_label] > 0.1]
+        df1= df1.groupby('id_aq_legal_station').resample(str(self.interval), on='phenomenon_time', label='right').mean()
         df2 = df2.groupby('id_aq_legal_station').resample(str(self.interval), on='phenomenon_time',
                                                           label='right').mean()
-
         df1.to_csv('tmp_raw_' + self.pollutant_label + '.csv')
         df2.to_csv('tmp_legal_' + self.pollutant_label + '.csv')
         df_raw = pd.read_csv('tmp_raw_' + self.pollutant_label + '.csv')
         df_legal = pd.read_csv('tmp_legal_' + self.pollutant_label + '.csv')
 
-        df_legal = df_legal.drop(df_legal.columns[2], axis=1)
-
+        #df_legal = df_legal.drop(df_legal.columns[2], axis=1)
+        
         df_raw['phenomenon_time'] = pd.to_datetime(df_raw['phenomenon_time'])
         df_legal['phenomenon_time'] = pd.to_datetime(df_legal['phenomenon_time'])
-
         df_raw = df_raw.dropna()
         df_legal = df_legal.dropna()
+        cutoff_Value=0.1
+        a=0
+        check=df_legal[self.target_label]
+        for current, next in zip(check, check[1:]): # this loop removes constant values.
+            if current==next:
+                check[a]=np.nan
+            a=a+1    
+        check=[float('nan') if x < cutoff_Value else x for x in check]
+        df_legal[self.target_label]=check.copy()
+        df_legal.dropna(inplace=True)
         data = pd.merge(df_raw, df_legal, on=('phenomenon_time', 'id_aq_legal_station'))
+        data = data.sort_values(by=['phenomenon_time'])
         data = data.dropna()
+        data.set_index('phenomenon_time',inplace=True)
+        data = data.astype('float')
         for file in glob('tmp*.*'):
            os.remove(file)
         return data
@@ -572,9 +585,8 @@ class CalibrationAlgorithmFramework():
         #for l in self.label_list:
         #    tmp_label_list.append('label_' + str(l))
         # print(" -- tmp_label_list: " + str(tmp_label_list));
-        self.df_testAndTraining['train_labels'] = df_trainig_and_testing[self.pollutant_label]
+        self.df_testAndTraining['train_labels'] = df_trainig_and_testing[[self.target_label]]
         # self.df_testAndTraining['train_labels'] = self.label_list;
-        print(self.df_testAndTraining['train_features'])
         return self.df_testAndTraining
     def createTrainingAndTestingDBAnomalyDetection(self):
         """

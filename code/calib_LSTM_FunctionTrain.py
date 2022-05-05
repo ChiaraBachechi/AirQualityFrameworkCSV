@@ -29,10 +29,10 @@ class Calib_LSTM_FunctionTrainer_001(CalibartionAlgorithmTrainer_interface):
         return self.calibrator
 
     def doTrain(self, df_train_features, df_train_labels_full):
-        df_train_labels_full = df_train_labels_full.rename(
-            columns={df_train_labels_full.columns[0]: self.info_dictionary['pollutant_label']})
+        #df_train_labels_full = df_train_labels_full.rename(
+        #    columns={df_train_labels_full.columns[0]: self.info_dictionary['pollutant_label']})
         updateInfoData(self.info_dictionary, df_train_features, df_train_labels_full)
-        df_train_labels = df_train_labels_full[self.info_dictionary['pollutant_label']]
+        df_train_labels = df_train_labels_full[self.info_dictionary['target_label']]
         #
         #
         print('conversion_factor_for :'+self.info_dictionary['pollutant_label'])
@@ -101,12 +101,8 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
 
 
 def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
-    df_train_labels = df_train_labels_full[info_dictionary['pollutant_label']]
+    df_train_labels = df_train_labels_full[info_dictionary['target_label']]
     #
-    print("Hello! updateInfoData " \
-          + info_dictionary['trainer_class_name'] \
-          + "." + info_dictionary['trainer_module_name'] \
-          + " ...")
     # print(str(df_train_features))
     # print("--- labels ---")
     # print(str(df_train_labels))
@@ -123,7 +119,9 @@ def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
                                      'pandas': pd.__version__,
                                      'dill': dill.__version__,
                                      'numpy': np.__version__,
-                                     'psycopg2': psycopg2.__version__}
+                                     'psycopg2': psycopg2.__version__,
+                                     'tensorflow': tensorflow.__version__,
+                                     'keras': keras.__version__}
     info_dictionary["features"] = {}
     #
     ACmin_values = np.percentile(df_train_features, 0, axis=0)
@@ -135,17 +133,11 @@ def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
                                                       '%.2f' % float(ACmax_values[idx])]
         info_dictionary['features'][feat]['unit_of_measure'] = 'mV'
     #
-    for label_name in info_dictionary['label_list']:
-        l = "label_" + label_name
-        info_dictionary[l] = {}
-        info_dictionary[l]['range'] = ['%.2f' % float(df_train_labels.min()), '%.2f' % float(df_train_labels.max())]
-        [min(df_train_labels), max(df_train_labels)]
-        info_dictionary[l]['unit_of_measure'] = info_dictionary['units_of_measure'][label_name]['unit_of_measure']
-    #
-    l = "label_" + info_dictionary['pollutant_label']
-    info_dictionary[l]
-    info_dictionary['pollutant_unit_of_measure'] = \
-    info_dictionary['units_of_measure'][info_dictionary['pollutant_label']]['unit_of_measure']
+    
+    info_dictionary[info_dictionary['pollutant_label']] = {}
+    info_dictionary[info_dictionary['pollutant_label']]['range'] = ['%.2f' % float(df_train_labels.min()), '%.2f' % float(df_train_labels.max())]
+    [min(df_train_labels), max(df_train_labels)]
+    info_dictionary[info_dictionary['pollutant_label']]['unit_of_measure'] = info_dictionary['units_of_measure'][info_dictionary['pollutant_label']]['unit_of_measure']
 
 
 """
@@ -248,7 +240,7 @@ def calibration_lstm_all(info_dictionary,X,y):
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(['train', 'validation'], loc='upper right')
-    plt.savefig(info_dictionary["dill_file_name"][:-5]+"_loss.png")
+    plt.savefig('../results/' + info_dictionary["dill_file_name"] + "_loss.png")
     prediction=model.predict(X_val)
     rmse=np.sqrt(mean_squared_error(y_val,prediction))
 

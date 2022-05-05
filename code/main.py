@@ -35,8 +35,11 @@ def addOptions():
     parser.add_argument('--feature_list', '-l', dest='feature_list', type=str \
                         , help='Insert the name of the pollutants separated by a -.' \
                         , default='')
+    parser.add_argument('--target_label', dest='target_label', type=str \
+                        , help='Insert the name of the target label' \
+                        , default='')
     parser.add_argument('--label_list', dest='label_list', type=str \
-                        , help='Insert the name of the pollutants separated by a -.' \
+                        , help='Insert the name of the all the target label you want in the csv generated from the db.' \
                         , default='')
     parser.add_argument('--pollutant_label', '-p', dest='pollutant_label', type=str \
                         , help='Insert the name of the pollutant to calibrate.' \
@@ -80,11 +83,13 @@ def optionsToInfo(options):
   status['trainer_module_name'] = options.trainer_module_name
   status['trainer_class_name'] = options.trainer_class_name
   status['interval'] = options.interval
+  status['target_label'] = options.target_label
   status['test_size'] = options.test_size
   status['pollutant_label'] = options.pollutant_label
   status['dill_file_name']=options.dill_file_name
   status['csv_target_data']=options.csv_target_data
   status['csv_feature_data']=options.csv_feature_data
+  status['label_list']=options.label_list
   status['number_of_previous_observations'] =options.number_of_previous_observations
   if (options.algorithm_parameters == ""):
       status['algorithm_parameters'] = {}
