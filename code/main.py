@@ -128,33 +128,21 @@ def main(args=None):
         #
         #
         """ example
-         python3 main.py \
-           --id_sensor 4003 \
-           --begin_time "2019-08-01 00:00:00" \
-           --end_time   "2019-08-20 00:00:00" \
-           --feature_list "no_we-no_aux" \
-           --label_list     "no" \
-           --pollutant_label "no" \
-           --trainer_module_name calibrationAlgorithmTrainer_dummy \
-           --trainer_class_name  CalibrationAlgorithmTrainer_dummy \
-           --dill_file_name      tmp_calibrator.dill \
-           --df_csv_file_prefix "data/tmp_calibrator" \
-           --action trainAndSaveDillToFile
-         python3 main.py \
-           --dill_file_name tmp_calibrator.dill \
-           --action getInfoFromDillFile
-           --anomaly True
-           python3 main.py --id_sensor 4003\
-           --begin_time "2019-08-01 00:00:00\
-           --end_time   "2019-08-20 00:00:00"\
-           --feature_list "no_we-no_aux"\
-           --label_list     "no"\
-           --pollutant_label "no"\
-           --trainer_module_name calib_LSTM_FunctionTrain\
-           --trainer_class_name  Calib_LSTM_FunctionTrainer_001\
-           --dill_file_name provaAnomaly.dill\
-           --action trainAndSaveDillToFile\
-           --anomaly True
+         python main.py 
+         --id_sensor 4011 
+         --begin_time "2019-09-01 00:00:00" 
+         --end_time "2019-09-15 00:00:00" 
+         --feature_list "no_we-no_aux" 
+         --csv_feature_data input_raw.csv 
+         --csv_target_data input_target.csv
+         --target_label "label_no"
+         --trainer_class_name "Calib_LSTM_FunctionTrainer_001"
+         --trainer_module_name "calib_LSTM_FunctionTrain"
+         --action "trainAndSaveDillToFile"
+         --csv_feature_data input_raw.csv
+         --csv_target_data input_target.csv
+         --pollutant_label "no"
+         --action "trainAndSaveDillToFile"
         """
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
         framework.initFromInfo(optionsToInfo(options))
@@ -263,10 +251,12 @@ def main(args=None):
            --dill_file_name tmp_calibrator.dill \
            --action getInfoFromDillFile
         """
-        with open(options.dill_file_name, 'rb') as dill_file:
+        with open('../data/' +  options.dill_file_name, 'rb') as dill_file:
             calibrator = dill.load(dill_file)
         # framework.initFromInfo(calibrator.get_info())
-        print(json.dumps(calibrator.get_info(), sort_keys=True, indent=2))
+        info = json.dumps(calibrator.get_info(), sort_keys=True, indent=2)
+        with open('../results/' + options.dill_file_name[:4] + 'info.json', 'w') as outfile:
+            outfile.write(info)
         # trash
         #  print(json.dumps(calibrator.get_json, sort_keys=True, indent=2))
         #  print(calibrator.get_json)

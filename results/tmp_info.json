@@ -1,0 +1,108 @@
+{
+  "RMSE": 0.22403012809074274,
+  "accuracy_ARPA": 1.0,
+  "accuracy_EEA": 1.0,
+  "algorithm_parameters": {},
+  "csv_feature_data": "input_raw.csv",
+  "csv_target_data": "input_target.csv",
+  "dates": {
+    "end": "2019-09-15 00:00:00",
+    "start": "2019-09-01 00:00:00"
+  },
+  "dill_file_name": "tmp_calibrator.dill",
+  "feat_order": [
+    "no_we",
+    "no_aux"
+  ],
+  "features": {
+    "no_aux": {
+      "range": [
+        "8.83",
+        "20.55"
+      ],
+      "unit_of_measure": "mV"
+    },
+    "no_we": {
+      "range": [
+        "301.19",
+        "323.64"
+      ],
+      "unit_of_measure": "mV"
+    }
+  },
+  "hyper_parameters": {
+    "number_of_neurons": 11.0
+  },
+  "id_sensor": "4011",
+  "interval": "10T",
+  "label_list": "",
+  "name": "LSTM",
+  "no": {
+    "range": [
+      "1.56",
+      "37.67"
+    ],
+    "unit_of_measure": "ug/m^3"
+  },
+  "number_of_previous_observations": 1,
+  "pollutant_label": "no",
+  "python_env": {
+    "dill": "0.3.4",
+    "keras": "2.8.0",
+    "numpy": "1.22.3",
+    "pandas": "1.4.2",
+    "psycopg2": "2.9.3 (dt dec pq3 ext lo64)",
+    "sklearn": "1.0.2",
+    "tensorflow": "2.8.0"
+  },
+  "target_label": "label_no",
+  "test_size": 0.2,
+  "trainer_class_name": "Calib_LSTM_FunctionTrainer_001",
+  "trainer_module_name": "calib_LSTM_FunctionTrain",
+  "units_of_measure": {
+    "co": {
+      "conversions": [
+        {
+          "factor": 1000,
+          "from": "mg/m^3"
+        },
+        {
+          "factor": 1160,
+          "from": "ppm"
+        },
+        {
+          "factor": 1.16,
+          "from": "ppb"
+        }
+      ],
+      "unit_of_measure": "ug/m^3"
+    },
+    "no": {
+      "conversions": [
+        {
+          "factor": 1.25,
+          "from": "ppb"
+        }
+      ],
+      "unit_of_measure": "ug/m^3"
+    },
+    "no2": {
+      "conversions": [
+        {
+          "factor": 1.912,
+          "from": "ppb"
+        }
+      ],
+      "unit_of_measure": "ug/m^3"
+    },
+    "o3": {
+      "conversions": [
+        {
+          "factor": 2.0,
+          "from": "ppb"
+        }
+      ],
+      "unit_of_measure": "ug/m^3"
+    }
+  }
+}
