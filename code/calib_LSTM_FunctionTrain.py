@@ -73,16 +73,16 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
 
         n_feature=dataset_feature.shape[1]
         dataset_na = dataset_feature.dropna()
-        model=tensorflow.keras.models.load_model(
-            path_dill)
+        #with open('../data/' +  path_dill, 'rb') as dill_file:
+        #   model = dill.load(dill_file)
+        model = tensorflow.keras.models.load_model(
+            path_dill[:-5])
 
 
         # need to add a test for outside of the bounds. they should be percent
         if dataset_na.empty:
             return np.nan
         else:
-            # this apply doesn't work for o3 if it doesn't contain NO2 raw features in it's calibration
-            # for NO, NO2, and CO the RF results are in ug/m3 directly.
             dataset_feature['phenomenon_time'] = pd.to_datetime(data_frame_in['phenomenon_time'])
             dataset_feature.index=dataset_feature['phenomenon_time']
             X=split_calib_data(dataset_feature,self.info_dictionary["number_of_previous_observations"], interval, self.info_dictionary['feat_order'])

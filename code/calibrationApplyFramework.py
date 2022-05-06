@@ -92,7 +92,7 @@ class CalibrationApplyFramework():
         # getting data to calibrate
         #
 
-        with open('../data/' + self.csv_feature_data, 'r') as csv_file:
+        with open('../data/' + csv_file_name_with_features, 'r') as csv_file:
             records = pd.read_csv(csv_file)
 
         for f in calibrator.info_dictionary["feat_order"]:
@@ -104,8 +104,9 @@ class CalibrationApplyFramework():
         output=output.loc[calibrator.info_dictionary["number_of_previous_observations"]:]
 
         output['result_time'] = datetime.datetime.now()
-        #
-        prediction = calibrator.apply_df(records,str(interval_in_minutes)+"T",'../data/' + calibrator.info_dictionary["dill_file_name"])
+        records['phenomenon_time'] = pd.to_datetime(records['phenomenon_time'])
+        records = records.resample(str(interval_in_minutes) + 'T', on='phenomenon_time', label='right').mean()
+        prediction = calibrator.apply_df(records,str(interval_in_minutes) + "T",'../data/' + calibrator.info_dictionary["dill_file_name"])
         #prediction['coverage'] = records['coverage']
         return prediction
         #

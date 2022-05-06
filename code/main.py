@@ -70,8 +70,8 @@ def addOptions():
                         help='The temporal window to consider with LSTM',default=1)
     parser.add_argument('--id_calibration',dest='id_calibration',type=int,
                         help="Insert sensor_calibration's row id to calibrate",default=0)
-    parser.add_argument('--anomaly',dest='anomaly',type=ast.literal_eval,
-                        help="True if you want to exclude anomalies",default=False)
+    parser.add_argument('--csv_calibrated_data',dest='csv_calibrated_data',type=str,
+                        help="Insert the name of the CSV where to put the calibrated data.",default='calibratedData.csv')
     return parser
 
 def optionsToInfo(options):
@@ -281,81 +281,14 @@ def main(args=None):
         # save to file of the dataset
 
         frameApply = calibrationApplyFramework.CalibrationApplyFramework()
-        frameApply.applyCalibrationSensorPollutantDillCSV(calibrator
+        prediction = frameApply.applyCalibrationSensorPollutantDillCSV(calibrator
                                                          , begin_time
                                                          , options.end_time
                                                          , framework.getIntervalInMinutesFromString(options.interval)
                                                          ,options.csv_feature_data)
+        prediction.to_csv('../data/' + options.csv_calibrated_data)
     #
-    #
-    elif (action == "trainToDB"):
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        framework.initFromInfo(optionsToInfo(options))
-        strnote = ''
-        if(options.anomaly):
-            framework.createTrainingAndTestingDB(True)
-            strnote = 'excluding anomalies'
-        else:
-            framework.createTrainingAndTestingDB()
-            strnote = 'not excluding anomalies'
-        framework.trainCalibrator()
-        calibrator = framework.getCalibrator()
-
-        # print(" --- calibrator: " + str(calibrator))
-
-        # inserimento nella tabella
-        id_dill=framework.insertDillToDB(calibrator)
-        #cambiare nome file
-        name_file = str(options.id_sensor)+"_"+str(options.pollutant_label)+"_"+str(id_dill)+".dill"
-        calibrator.info_dictionary["dill_file_name"] = name_file
-        calibrator.info_dictionary["anomaly"] = strnote
-        try:
-            with open(os.path.join(os.getcwd()+"/dill/",name_file), 'wb') as dill_file:
-                dill.dump(calibrator, dill_file)
-            if (calibrator.info_dictionary["name"]=="LSTM"):
-                model = tensorflow.keras.models.load_model("tmp")
-                with open(os.path.join(os.getcwd() + "/dill/", name_file[:-5]), 'wb') as dill_file:
-                    model.save(dill_file)
-                os.remove("tmp")
-                print("\n dill calibrator saved as " + calibrator.info_dictionary["dill_file_name"] + "\n")
-        except:
-            rows_deleted=framework.removeDillFromDB(id_dill)
-            if(rows_deleted==1):
-                print("Error while saving dill file, the entry has been removed")
-            else:
-                print("Error while saving dill file. Couldn't eliminate the entry, must be done manually")
-    elif (action == "TrainToDBtestRepairing"):
-        framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        framework.initFromInfo(optionsToInfo(options))
-        strnote = '';
-        framework.createTrainingAndTestingDBRepairing()
-        strnote = 'excluding anomalies'
-        framework.trainCalibrator()
-        calibrator = framework.getCalibrator()
-
-        # print(" --- calibrator: " + str(calibrator))
-
-        # inserimento nella tabella
-        id_dill=framework.insertDillToDB(calibrator)
-        #cambiare nome file
-        name_file = str(options.id_sensor)+"_"+str(options.pollutant_label)+"_"+str(id_dill)+".dill"
-        calibrator.info_dictionary["dill_file_name"] = name_file
-        calibrator.info_dictionary["repaired"] = True
-        try:
-            with open(os.path.join(os.getcwd()+"/dill/",name_file), 'wb') as dill_file:
-                dill.dump(calibrator, dill_file)
-            if (calibrator.info_dictionary["name"]=="LSTM"):
-                model = tensorflow.keras.models.load_model("tmp")
-                with open(os.path.join(os.getcwd() + "/dill/", name_file[:-5]), 'wb') as dill_file:
-                    model.save(dill_file)
-                os.remove("tmp")
-                print("\n dill calibrator saved as " + calibrator.info_dictionary["dill_file_name"] + "\n")
-        except:
-            rows_deleted=framework.removeDillFromDB(id_dill)
-            if(rows_deleted==1):
-                print("Error while saving dill file, the entry has been removed")
-            else:
-                print("Error while saving dill file. Couldn't eliminate the entry, must be done manually")
+    #DA MODIFICARE(FORSE)
     elif (action == "applyDillsToSensor"):
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
         frameApply = calibrationApplyFramework.CalibrationApplyFramework()
