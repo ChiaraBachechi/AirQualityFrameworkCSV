@@ -153,8 +153,7 @@ def main(args=None):
         with open('../results/' + options.dill_file_name, 'wb') as dill_file:
             dill.dump(calibrator, dill_file)
 
-    #
-    #DA SISTEMARE
+    #FUNZIONA
     elif (action == "trainAndSaveDillToFileFromInfo"):
         #
         #
@@ -195,21 +194,21 @@ def main(args=None):
            --df_csv_file_prefix "data/calibrator001"
         """
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        with open(options.info_file_name, 'r') as f:
+        with open('../data/' + options.info_file_name, 'r') as f:
             info = json.load(f)
         framework.initFromInfo(info)
-        framework.createTrainingAndTestingDB()
+        framework.createTrainingAndTestingFromCSV()
         framework.trainCalibrator()
         calibrator = framework.getCalibrator()
         #
-        print(" --- calibrations info:\n",
-              json.dumps(calibrator.get_info(), sort_keys=True, indent=2))
+        #print(" --- calibrations info:\n",
+        #      json.dumps(calibrator.get_info(), sort_keys=True, indent=2))
         #
-        with open(options.dill_file_name, 'wb') as dill_file:
+        with open('../results/' + options.dill_file_name, 'wb') as dill_file:
             dill.dump(calibrator, dill_file)
-        print("\n dill calibrator saved as " + options.dill_file_name + "\n")
-        if (options.df_csv_file_prefix != ""):
-            framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
+        #print("\n dill calibrator saved as " + options.dill_file_name + "\n")
+        #if (options.df_csv_file_prefix != ""):
+        #    framework.saveTrainingAndTestingDataToCsv(options.df_csv_file_prefix)
         #
     #FUNZIONA
     elif (action == "getInfoFromDillFile"):
@@ -224,7 +223,7 @@ def main(args=None):
             calibrator = dill.load(dill_file)
         # framework.initFromInfo(calibrator.get_info())
         info = json.dumps(calibrator.get_info(), sort_keys=True, indent=2)
-        with open('../results/' + options.dill_file_name[:4] + 'info.json', 'w') as outfile:
+        with open('../results/' + options.dill_file_name.spit('.')[0] + 'info.json', 'w') as outfile:
             outfile.write(info)
         # trash
         #  print(json.dumps(calibrator.get_json, sort_keys=True, indent=2))
@@ -259,7 +258,7 @@ def main(args=None):
         #
 
 
-        with open(options.dill_file_name, 'rb') as dill_file:
+        with open('../data/' + options.dill_file_name, 'rb') as dill_file:
             calibrator = dill.load(dill_file)
         if ('number_of_previous_observations' in calibrator.info_dictionary):
             begin_time=datetime.datetime.strptime(options.begin_time, '%Y-%m-%d %H:%M:%S')
@@ -282,17 +281,11 @@ def main(args=None):
         # save to file of the dataset
 
         frameApply = calibrationApplyFramework.CalibrationApplyFramework()
-        frameApply.applyCalibrationSensorPollutantDillDf(calibrator
+        frameApply.applyCalibrationSensorPollutantDillCSV(calibrator
                                                          , begin_time
                                                          , options.end_time
-                                                         , options.id_sensor
                                                          , framework.getIntervalInMinutesFromString(options.interval)
-                                                         , options.pollutant_label
-                                                         ,
-                                                         True if (options.do_persist_data.lower() == "true") else False
-                                                         , ""
-                                                         ,options.anomaly
-                                                         )
+                                                         ,options.csv_feature_data)
     #
     #
     elif (action == "trainToDB"):

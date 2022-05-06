@@ -74,7 +74,7 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
         n_feature=dataset_feature.shape[1]
         dataset_na = dataset_feature.dropna()
         model=tensorflow.keras.models.load_model(
-            os.path.join(path_dill,self.info_dictionary["dill_file_name"][:-5]))
+            path_dill)
 
 
         # need to add a test for outside of the bounds. they should be percent
@@ -92,7 +92,7 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
             X = X.reshape(X.shape[0], self.info_dictionary["number_of_previous_observations"] + 1, n_feature)
             yhat = model.predict(X, verbose=0)
             yhat = np.abs(self.scaler["scaler_pollutant"].inverse_transform(yhat))
-            pred[self.info_dictionary["pollutant_label"]]=yhat
+            pred[self.info_dictionary["target_label"]]=yhat
         return pred
 
     #
@@ -177,7 +177,7 @@ def split_data(X,y,n_steps,freq_sampling, feat_list):
     y = y.drop(['phenomenon_time','number_of_previous_observations'], axis=1)
     return X,y
 def split_calib_data(X,n_steps,freq_sampling, feat_list):
-
+    #dataset_feature,self.info_dictionary["number_of_previous_observations"], interval, self.info_dictionary['feat_order']
     X=X.sort_index()
     for j in np.arange(1,n_steps+1):
         for feat in feat_list:
@@ -186,7 +186,7 @@ def split_calib_data(X,n_steps,freq_sampling, feat_list):
 
     X['number_of_previous_observations'] = X.phenomenon_time.shift(-n_steps)-X.phenomenon_time
     X['number_of_previous_observations'] = X['number_of_previous_observations'].dt.total_seconds() / 60
-    X['number_of_previous_observations']=X['number_of_previous_observations'].fillna(0)
+    X['number_of_previous_observations'] = X['number_of_previous_observations'].fillna(0)
 
 
     X.index=X.index.shift(n_steps,freq=freq_sampling)

@@ -51,7 +51,7 @@ class CalibrationAlgorithmFramework():
       self.target_label = info['target_label']
       self.trainer_module_name = info["trainer_module_name"]
       self.trainer_class_name = info["trainer_class_name"]
-      self.test_size          = info['test_size']
+      #self.test_size = info['test_size']
       self.pollutant_label = info['pollutant_label']
       self.interval = info['interval']
       self.number_of_previous_observations=info['number_of_previous_observations']
@@ -74,7 +74,7 @@ class CalibrationAlgorithmFramework():
         status['trainer_module_name']=self.trainer_module_name
         status['trainer_class_name']=self.trainer_class_name
         status['interval']=self.interval
-        status['test_size']=self.test_size
+        #status['test_size']=self.test_size
         status['pollutant_label']=self.pollutant_label
         status['interval']=self.interval
         status['number_of_previous_observations']=self.number_of_previous_observations

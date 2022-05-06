@@ -76,6 +76,56 @@ class CalibrationApplyFramework():
         #     conn = trafair_db_getConnection()
         #     print("writing data to db..")
         #     # conn.commit()
+    
+    def applyCalibrationSensorPollutantDillCSV(self
+                                              , calibrator
+                                              , begin_time
+                                              , end_time
+                                              , interval_in_minutes
+                                              , csv_file_name_with_features
+    ):
+        """
+        This function produces calibrated data using the given calibrator on the csv feature data
+        """
+        #
+        #
+        # getting data to calibrate
+        #
+
+        with open('../data/' + self.csv_feature_data, 'r') as csv_file:
+            records = pd.read_csv(csv_file)
+
+        for f in calibrator.info_dictionary["feat_order"]:
+            if f not in records.columns:
+                #ERROR
+                print('one of the feature needed to run the model is missing in the csv input:' + str(f))
+
+        output=records.copy()
+        output=output.loc[calibrator.info_dictionary["number_of_previous_observations"]:]
+
+        output['result_time'] = datetime.datetime.now()
+        #
+        prediction = calibrator.apply_df(records,str(interval_in_minutes)+"T",'../data/' + calibrator.info_dictionary["dill_file_name"])
+        #prediction['coverage'] = records['coverage']
+        return prediction
+        #
+        """
+        output=output.merge(prediction, how='left', on='phenomenon_time')
+        print('--input size--')
+        print(records.shape)
+        print('--output size--')
+        print(records.shape)
+        print('----output----')
+        print(output)
+        print(output['phenomenon_time'])
+        """
+        #sqlio.to_sql(output,table_name,sql_engine,if_exists='append',index=False)
+        #
+        # if (do_persist_data):
+        #     conn = trafair_db_getConnection()
+        #     print("writing data to db..")
+        #     # conn.commit()
+
 
     def applyCalibrationDillDfRepaired(self
                                               , calibrator
