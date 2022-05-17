@@ -50,9 +50,8 @@ class CalibrationApplyFramework():
         )
 
         records = records.rename(columns = {'phenomenon_time_rounded':'phenomenon_time'})
-
-        output=records.copy()
-        output=output.loc[calibrator.info_dictionary["number_of_previous_observations"]:]
+        output = records.copy()
+        output = output.loc[calibrator.info_dictionary["number_of_previous_observations"]:]
 
         output['result_time'] = datetime.datetime.now()
         #
@@ -106,6 +105,7 @@ class CalibrationApplyFramework():
         output['result_time'] = datetime.datetime.now()
         records['phenomenon_time'] = pd.to_datetime(records['phenomenon_time'])
         records = records.resample(str(interval_in_minutes) + 'T', on='phenomenon_time', label='right').mean()
+        records.reset_index(level=0,inplace=True)
         prediction = calibrator.apply_df(records,str(interval_in_minutes) + "T",'../data/' + calibrator.info_dictionary["dill_file_name"])
         #prediction['coverage'] = records['coverage']
         return prediction

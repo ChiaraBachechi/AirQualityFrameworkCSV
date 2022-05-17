@@ -28,10 +28,10 @@ class Calib_VR_SVR_FunctionTrainer_001(CalibartionAlgorithmTrainer_interface):
         return self.calibrator
 
     def doTrain(self, df_train_features, df_train_labels_full):
-        df_train_labels_full=df_train_labels_full.rename(columns={df_train_labels_full.columns[0]:self.info_dictionary['pollutant_label']})
+        #df_train_labels_full=df_train_labels_full.rename(columns={df_train_labels_full.columns[0]:self.info_dictionary['pollutant_label']})
 
         updateInfoData(self.info_dictionary, df_train_features, df_train_labels_full)
-        df_train_labels = df_train_labels_full[self.info_dictionary['pollutant_label']]
+        df_train_labels = df_train_labels_full[self.info_dictionary['target_label']]
         #
         #
         print('conversion_factor_for :'+self.info_dictionary['pollutant_label'])
@@ -44,7 +44,7 @@ class Calib_VR_SVR_FunctionTrainer_001(CalibartionAlgorithmTrainer_interface):
         # n_jobs means the CPU. -1 is all :)
         pesi_vr=tuning_pesi_Voting(df_train_features,
                                    df_train_labels_full)
-        param_svr=tuning_parametri_SVR(df_train_features,df_train_labels,self.info_dictionary['id_sensor'])
+        param_svr=tuning_parametri_SVR(df_train_features,df_train_labels,'../results/')
 
         vr_no_number_of_previous_observations,vr_number_of_previous_observations,svr,scaler_feat,scaler_pollutant, min_max=calibration_VR_SVR_all(self.info_dictionary,df_train_features,df_train_labels_full,param_svr,
                                                     pesi_vr)
@@ -76,8 +76,8 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
 
     def apply_df(self, data_frame_in,interval,path_dill):
 
-        scaler_feat=self.scaler["scaler_feat"]
-        scaler_pollutant=self.scaler["scaler_pollutant"]
+        scaler_feat = self.scaler["scaler_feat"]
+        scaler_pollutant = self.scaler["scaler_pollutant"]
 
         min_train=list(self.min_max['min_train'].values())
         max_train=list(self.min_max['max_train'].values())
@@ -85,6 +85,7 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
         # print(" ---- data_frame_in: " + str(data_frame_in))
         dataset_feature = data_frame_in[self.info_dictionary['feat_order']]
         dataset_na = dataset_feature.dropna()
+        dataset_feature['phenomenon_time'] = pd.to_datetime(data_frame_in['phenomenon_time'])
 
         # need to add a test for outside of the bounds. they should be percent
         if dataset_na.empty:
@@ -93,7 +94,9 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
             pred = pd.DataFrame()
             pred['phenomenon_time'] = data_frame_in.iloc[self.info_dictionary["number_of_previous_observations"]:]['phenomenon_time']
             yhat=[]
+            
             prev_data=dataset_feature.index[0]
+            dataset_feature.drop('phenomenon_time',axis=1,inplace=True)
             for i in np.arange(self.info_dictionary['number_of_previous_observations'], dataset_feature.shape[0]):
                 range = np.all((dataset_feature.iloc[i] > min_train) & (dataset_feature.iloc[i] < max_train))
                 if range == False:
@@ -125,8 +128,8 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
                         p = self.calibrator['VR_no_number_of_previous_observations'].predict(tmp)
                         yhat.append(p)
                 prev_data = dataset_feature.index[i]
-        pred[self.info_dictionary["pollutant_label"]]=yhat
-        pred[self.info_dictionary["pollutant_label"]] = pred[self.info_dictionary["pollutant_label"]].astype(float)
+        pred[self.info_dictionary["target_label"]]=yhat
+        pred[self.info_dictionary["target_label"]] = pred[self.info_dictionary["target_label"]].astype(float)
 
         return pred
 
@@ -140,8 +143,8 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
 
 def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
 
-    df_train_labels = df_train_labels_full[info_dictionary['pollutant_label']]
-    #
+    #df_train_labels = df_train_labels_full[info_dictionary['pollutant_label']]
+    df_train_labels = df_train_labels_full[info_dictionary['target_label']]
     print("Hello! updateInfoData " \
           + info_dictionary['trainer_class_name'] \
           + "." + info_dictionary['trainer_module_name'] \
@@ -177,14 +180,14 @@ def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
         info_dictionary['features'][feat]['unit_of_measure'] = 'mV'
     #
     for label_name in info_dictionary['label_list']:
-        l = "label_" + label_name
+        l = label_name
         info_dictionary[l] = {}
         info_dictionary[l]['range'] = ['%.2f' % float(df_train_labels.min()), '%.2f' % float(df_train_labels.max())]
         [min(df_train_labels), max(df_train_labels)]
         info_dictionary[l]['unit_of_measure'] = info_dictionary['units_of_measure'][label_name]['unit_of_measure']
     #
-    l = "label_" + info_dictionary['pollutant_label']
-    info_dictionary[l]
+    #l = "label_" + info_dictionary['pollutant_label']
+    #info_dictionary[l]
     info_dictionary['pollutant_unit_of_measure'] = \
     info_dictionary['units_of_measure'][info_dictionary['pollutant_label']]['unit_of_measure']
 
