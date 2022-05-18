@@ -74,43 +74,48 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
         self.scaler=scaler
         self.min_max=min_max
 
-    def apply_df(self, data_frame_in,interval,path_dill):
+    def apply_df(self, data_frame_in,interval, path):
 
         scaler_feat = self.scaler["scaler_feat"]
         scaler_pollutant = self.scaler["scaler_pollutant"]
 
         min_train=list(self.min_max['min_train'].values())
         max_train=list(self.min_max['max_train'].values())
-
-        # print(" ---- data_frame_in: " + str(data_frame_in))
-        dataset_feature = data_frame_in[self.info_dictionary['feat_order']]
+        feature_list = self.info_dictionary['feat_order'].copy()
+        feature_list.append('phenomenon_time')
+        dataset_feature = data_frame_in[feature_list]
         dataset_na = dataset_feature.dropna()
-        dataset_feature['phenomenon_time'] = pd.to_datetime(data_frame_in['phenomenon_time'])
-
         # need to add a test for outside of the bounds. they should be percent
         if dataset_na.empty:
             return np.nan
         else:
-            pred = pd.DataFrame()
+            pred = pd.DataFrame(columns = ['phenomenon_time',self.info_dictionary["target_label"]])
+            pred[self.info_dictionary["target_label"]] = np.nan
             pred['phenomenon_time'] = data_frame_in.iloc[self.info_dictionary["number_of_previous_observations"]:]['phenomenon_time']
+            pred.set_index('phenomenon_time',inplace = True)
             yhat=[]
-            
-            prev_data=dataset_feature.index[0]
-            dataset_feature.drop('phenomenon_time',axis=1,inplace=True)
+            prev_data = dataset_feature.iloc[0]['phenomenon_time']
+            #dataset_feature.drop('phenomenon_time',axis=1,inplace=True)
             for i in np.arange(self.info_dictionary['number_of_previous_observations'], dataset_feature.shape[0]):
-                range = np.all((dataset_feature.iloc[i] > min_train) & (dataset_feature.iloc[i] < max_train))
+                range = np.all((dataset_feature.iloc[i][self.info_dictionary['feat_order']] > min_train) & (dataset_feature.iloc[i][self.info_dictionary['feat_order']] < max_train))
                 if range == False:
-                    tmp = np.array(dataset_feature.iloc[i].copy(), dtype=float)
-                    tmp = scaler_feat.transform(tmp.reshape(1, -1))
-                    p = np.array(self.calibrator['SVR'].predict(tmp))
-                    p = scaler_pollutant.inverse_transform(p.reshape(-1, 1))
-                    yhat.append(np.abs(p[0]))
+                    #use svr for out of range values
+                    print('out of range')
+                    if(dataset_feature.iloc[i][self.info_dictionary['feat_order']].copy().dropna().shape[0]> 0):
+                        tmp = np.array(dataset_feature.iloc[i][self.info_dictionary['feat_order']].copy().dropna(), dtype=float)
+                        tmp = scaler_feat.transform(tmp.reshape(1, -1))
+                        p = np.array(self.calibrator['SVR'].predict(tmp))
+                        p = scaler_pollutant.inverse_transform(p.reshape(-1, 1))
+                        pred.at[prev_data , self.info_dictionary["target_label"]] = np.abs(p[0])
                 else:
-                    cur = dataset_feature.index[i]
+                    #use vr for in range values
+                    print('in range')
+                    cur = dataset_feature.iloc[i]['phenomenon_time']
                     diff_number_of_previous_observations = cur - prev_data
-                    diff_number_of_previous_observations= diff_number_of_previous_observations.total_seconds() / 60
+                    diff_number_of_previous_observations = diff_number_of_previous_observations.total_seconds() / 60
                     if (diff_number_of_previous_observations == (interval * self.info_dictionary['number_of_previous_observations'])):
-                        tmp = dataset_feature.iloc[i].copy()
+                        print('enough previous obs')
+                        tmp = dataset_feature.iloc[i][self.info_dictionary['feat_order']].copy()
                         for k in np.arange(1, self.info_dictionary['number_of_previous_observations'] + 1):
                             if self.info_dictionary['pollutant_label'] == "o3":
                                 tmp['ox_aux_{}'.format(k)] = dataset_feature.iloc[i - k]['ox_aux']
@@ -121,14 +126,19 @@ class Calib_VR_SVR_Function(CalibartionAlgorithm_interface):
                                 tmp[self.info_dictionary['pollutant_label'] + '_we_{}'.format(k)] = \
                                     dataset_feature.iloc[i - k][self.info_dictionary['pollutant_label'] + '_we']
                         tmp = np.array(tmp, dtype=float).reshape(1, -1)
+                        print('-------------------------')
+                        print(tmp)
                         p = self.calibrator['VR_number_of_previous_observations'].predict(tmp)
-                        yhat.append(p)
+                        #yhat.append(p)
+                        pred.at[prev_data , self.info_dictionary["target_label"]] = p
                     else:
-                        tmp = np.array(dataset_feature.iloc[i].copy(), dtype=float).reshape(1, -1)
+                        print('non enough previous obs')
+                        tmp = np.array(dataset_feature.iloc[i][self.info_dictionary['feat_order']].copy(), dtype=float).reshape(1, -1)
                         p = self.calibrator['VR_no_number_of_previous_observations'].predict(tmp)
-                        yhat.append(p)
-                prev_data = dataset_feature.index[i]
-        pred[self.info_dictionary["target_label"]]=yhat
+                        #yhat.append(p)
+                        pred.at[prev_data , self.info_dictionary["target_label"]] = p
+                prev_data = dataset_feature.iloc[i]['phenomenon_time']
+        #pred[self.info_dictionary["target_label"]]=yhat
         pred[self.info_dictionary["target_label"]] = pred[self.info_dictionary["target_label"]].astype(float)
 
         return pred

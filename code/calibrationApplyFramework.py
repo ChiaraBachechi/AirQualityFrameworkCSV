@@ -106,7 +106,7 @@ class CalibrationApplyFramework():
         records['phenomenon_time'] = pd.to_datetime(records['phenomenon_time'])
         records = records.resample(str(interval_in_minutes) + 'T', on='phenomenon_time', label='right').mean()
         records.reset_index(level=0,inplace=True)
-        prediction = calibrator.apply_df(records,str(interval_in_minutes) + "T",'../data/' + calibrator.info_dictionary["dill_file_name"])
+        prediction = calibrator.apply_df(records,str(interval_in_minutes),'../data/' + calibrator.info_dictionary["dill_file_name"])
         #prediction['coverage'] = records['coverage']
         return prediction
         #
