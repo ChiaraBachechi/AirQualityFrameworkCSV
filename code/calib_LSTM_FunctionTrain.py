@@ -85,7 +85,7 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
         else:
             dataset_feature['phenomenon_time'] = pd.to_datetime(data_frame_in['phenomenon_time'])
             dataset_feature.index = dataset_feature['phenomenon_time']
-            X=split_calib_data(dataset_feature,self.info_dictionary["number_of_previous_observations"], interval, self.info_dictionary['feat_order'])
+            X=split_calib_data(dataset_feature,self.info_dictionary["number_of_previous_observations"], interval + 'T', self.info_dictionary['feat_order'])
             pred = pd.DataFrame()
             pred['phenomenon_time']=X.index
             X=self.scaler["scaler_feat"].transform(X)
