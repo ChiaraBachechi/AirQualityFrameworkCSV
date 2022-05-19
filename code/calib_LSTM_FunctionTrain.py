@@ -50,7 +50,8 @@ class Calib_LSTM_FunctionTrainer_001(CalibartionAlgorithmTrainer_interface):
         scaler={"scaler_feat":scaler_feat,
                 "scaler_pollutant":scaler_pollutant}
         self.calibrator = Calib_LSTM_Function()
-        self.calibrator.init(self.info_dictionary,scaler)
+        self.calibrator.init(self.info_dictionary,scaler,calibrator)
+        self.calibrator.model = calibrator
         calibrator.save("tmp")
         return self.calibrator
 
@@ -60,37 +61,39 @@ class Calib_LSTM_Function(CalibartionAlgorithm_interface):
     the calibrator produced by the trainer - example
     """
 
-    def init(self, info_dictionary,scaler):
+    def init(self, info_dictionary,scaler, model):
         super().init(info_dictionary)
         info = self.info_dictionary
-        self.scaler=scaler
+        self.scaler = scaler
+        self.model = model
         #
 
     def apply_df(self, data_frame_in,interval,path_dill):
 
         # print(" ---- data_frame_in: " + str(data_frame_in))
-        dataset_feature = data_frame_in[self.info_dictionary['feat_order']]
-
-        n_feature=dataset_feature.shape[1]
+        feature_list = self.info_dictionary['feat_order'].copy()
+        feature_list.append('phenomenon_time')
+        dataset_feature = data_frame_in[feature_list]
+        dataset_feature['phenomenon_time'] = pd.to_datetime(dataset_feature['phenomenon_time'])
+        n_feature=dataset_feature.shape[1] - 1
         dataset_na = dataset_feature.dropna()
         #with open('../data/' +  path_dill, 'rb') as dill_file:
         #   model = dill.load(dill_file)
-        model = tensorflow.keras.models.load_model(
-            path_dill[:-5])
+        #model = tensorflow.keras.models.load_model(
+        #   path_dill[:-5])
 
 
         # need to add a test for outside of the bounds. they should be percent
         if dataset_na.empty:
             return np.nan
         else:
-            dataset_feature['phenomenon_time'] = pd.to_datetime(data_frame_in['phenomenon_time'])
-            dataset_feature.index = dataset_feature['phenomenon_time']
+            #dataset_feature.set_index('phenomenon_time',inplace = True)
             X=split_calib_data(dataset_feature,self.info_dictionary["number_of_previous_observations"], interval + 'T', self.info_dictionary['feat_order'])
             pred = pd.DataFrame()
             pred['phenomenon_time']=X.index
             X=self.scaler["scaler_feat"].transform(X)
             X = X.reshape(X.shape[0], self.info_dictionary["number_of_previous_observations"] + 1, n_feature)
-            yhat = model.predict(X, verbose=0)
+            yhat = self.model.predict(X, verbose=0)
             yhat = np.abs(self.scaler["scaler_pollutant"].inverse_transform(yhat))
             pred[self.info_dictionary["target_label"]]=yhat
         return pred
@@ -187,14 +190,13 @@ def split_calib_data(X,n_steps,freq_sampling, feat_list):
     X['number_of_previous_observations'] = X.phenomenon_time.shift(-n_steps)-X.phenomenon_time
     X['number_of_previous_observations'] = X['number_of_previous_observations'].dt.total_seconds() / 60
     X['number_of_previous_observations'] = X['number_of_previous_observations'].fillna(0)
-
-
+    X.set_index('phenomenon_time',inplace=True)
     X.index=X.index.shift(n_steps,freq=freq_sampling)
     X = X[X['number_of_previous_observations'].astype(int) == (int(freq_sampling[:-1]) * n_steps)]
 
     if X.shape[0]==0:
         print("Samples not found in this sliding window")
-    X= X.drop(['phenomenon_time','number_of_previous_observations'], axis=1)
+    X= X.drop(['number_of_previous_observations'], axis=1)
     return X
 
 def calibration_lstm_all(info_dictionary,X,y,validation = False):
