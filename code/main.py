@@ -102,26 +102,28 @@ def optionsToInfo(options):
 
 
 def main(args=None):
-    argParser = addOptions()
-    options = argParser.parse_args(args=args)
+    #argParser = addOptions()
+    #options = argParser.parse_args(args=args)
+    with open('../data/config.json', 'r') as config_file:
+        options = json.load(config_file)
 
     all_feature_available = ['no_we', 'no_aux', 'no2_we', 'no2_aux', 'ox_we', 'ox_aux', 'co_we', 'co_aux',
                              'temperature', 'humidity']
-    if not options.feature_list:  # check if empty -  if so, get the entire list
+    if not options['feature_list']:  # check if empty -  if so, get the entire list
         features = all_feature_available
     else:  # gets the input and convert to int list
-        features = options.feature_list.split('-')  # split the str to list
+        features = options['feature_list'].split('-')  # split the str to list
         for p in features:  # check the numbers of the sensors match
             if p not in all_feature_available:
                 raise ValueError(p + ' is not a valid pollutant')
-    if options.interval.find('T') < 0 and options.interval.find('H') < 0:
+    if options['interval'].find('T') < 0 and options['interval'].find('H') < 0:
         raise ValueError(
-            options.interval + ' is not a valid interval. It should contain T (for minutes) or H (for hours).')
+            options['interval'] + ' is not a valid interval. It should contain T (for minutes) or H (for hours).')
     #
     #
     #
     ##
-    action = options.action
+    action = options['action']
     #
     #FUNZIONA
     if (action == "trainAndSaveDillToFile"):
@@ -150,7 +152,7 @@ def main(args=None):
         framework.trainCalibrator()
         calibrator = framework.getCalibrator()
         # print(" --- calibrator: " + str(calibrator))
-        with open('../results/' + options.dill_file_name, 'wb') as dill_file:
+        with open('../results/' + options['dill_file_name'], 'wb') as dill_file:
             dill.dump(calibrator, dill_file)
 
     #FUNZIONA
@@ -194,7 +196,7 @@ def main(args=None):
            --df_csv_file_prefix "data/calibrator001"
         """
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
-        with open('../data/' + options.info_file_name, 'r') as f:
+        with open('../data/' + options['info_file_name'], 'r') as f:
             info = json.load(f)
         framework.initFromInfo(info)
         framework.createTrainingAndTestingFromCSV()
@@ -204,7 +206,7 @@ def main(args=None):
         #print(" --- calibrations info:\n",
         #      json.dumps(calibrator.get_info(), sort_keys=True, indent=2))
         #
-        with open('../results/' + options.dill_file_name, 'wb') as dill_file:
+        with open('../results/' + options['dill_file_name'], 'wb') as dill_file:
             dill.dump(calibrator, dill_file)
         #print("\n dill calibrator saved as " + options.dill_file_name + "\n")
         #if (options.df_csv_file_prefix != ""):
@@ -219,11 +221,11 @@ def main(args=None):
            --dill_file_name tmp_calibrator.dill \
            --action getInfoFromDillFile
         """
-        with open('../data/' +  options.dill_file_name, 'rb') as dill_file:
+        with open('../data/' +  options['dill_file_name'], 'rb') as dill_file:
             calibrator = dill.load(dill_file)
         # framework.initFromInfo(calibrator.get_info())
         info = json.dumps(calibrator.get_info(), sort_keys=True, indent=2)
-        with open('../results/' + options.dill_file_name.spit('.')[0] + 'info.json', 'w') as outfile:
+        with open('../results/' + options['dill_file_name'].spit('.')[0] + 'info.json', 'w') as outfile:
             outfile.write(info)
         # trash
         #  print(json.dumps(calibrator.get_json, sort_keys=True, indent=2))
@@ -258,21 +260,21 @@ def main(args=None):
         #
 
 
-        with open('../data/' + options.dill_file_name, 'rb') as dill_file:
+        with open('../data/' + options['dill_file_name'], 'rb') as dill_file:
             calibrator = dill.load(dill_file)
         if ('number_of_previous_observations' in calibrator.info_dictionary):
-            begin_time=datetime.datetime.strptime(options.begin_time, '%Y-%m-%d %H:%M:%S')
-            time_diff = int(options.interval[:-1]) * (calibrator.info_dictionary["number_of_previous_observations"]+1)
-            if options.interval[-1:] == 'T':
+            begin_time=datetime.datetime.strptime(options['begin_time'], '%Y-%m-%d %H:%M:%S')
+            time_diff = int(options['interval'][:-1]) * (calibrator.info_dictionary["number_of_previous_observations"]+1)
+            if options['interval'][-1:] == 'T':
                 begin_time = begin_time - datetime.timedelta(minutes=time_diff)
             else:
                 begin_time = begin_time - datetime.timedelta(hours=time_diff)
             begin_time=str(begin_time)
 
-        if(options.number_of_previous_observations!=calibrator.info_dictionary["number_of_previous_observations"]):
+        if(options['number_of_previous_observations']!=calibrator.info_dictionary["number_of_previous_observations"]):
             print("The model was trained with number_of_previous_observations=",calibrator.info_dictionary["number_of_previous_observations"])
             return
-        if(list(options.feature_list.split("-"))!=calibrator.info_dictionary["feat_order"]):
+        if(list(options['feature_list'].split("-"))!=calibrator.info_dictionary["feat_order"]):
             print("Error: The feature of the model and the feature listed in the options are different.\
             The model was trained with these features:")
             print(str(calibrator.info_dictionary["feat_order"]))
@@ -283,22 +285,22 @@ def main(args=None):
         frameApply = calibrationApplyFramework.CalibrationApplyFramework()
         prediction = frameApply.applyCalibrationSensorPollutantDillCSV(calibrator
                                                          , begin_time
-                                                         , options.end_time
-                                                         , framework.getIntervalInMinutesFromString(options.interval)
-                                                         ,options.csv_feature_data)
-        prediction.to_csv('../data/' + options.csv_calibrated_data)
+                                                         , options['end_time']
+                                                         , framework.getIntervalInMinutesFromString(options['interval'])
+                                                         ,options['csv_feature_data'])
+        prediction.to_csv('../results/' + options['csv_calibrated_data'])
     #
     #DA MODIFICARE(FORSE)
     elif (action == "applyDillsToSensor"):
         framework = calibrationAlgorithmFramework.CalibrationAlgorithmFramework()
         frameApply = calibrationApplyFramework.CalibrationApplyFramework()
-        row = frameApply.getSensorCalibration(options.id_calibration)
+        row = frameApply.getSensorCalibration(options['id_calibration'])
         print(row)
         pollutants = ['no','no2','co','o3']
         prediction = pd.DataFrame()
 
-        prediction['phenomenon_time']=pd.date_range(start=options.begin_time, end=options.end_time,
-                                                    freq=options.interval)
+        prediction['phenomenon_time']=pd.date_range(start=options['begin_time'], end=options['end_time'],
+                                                    freq=options['interval'])
 
         prediction['result_time']=str(datetime.datetime.now()).split('.')[0]
         prediction.insert(loc=0,column='id_sensor_calibration',value=row['id'])
@@ -311,12 +313,12 @@ def main(args=None):
                     prediction[p]=0
                     continue
 
-                begin_time=options.begin_time
+                begin_time=options['begin_time']
                 if ('number_of_previous_observations' in calibrator.info_dictionary):
-                    begin_time = datetime.datetime.strptime(options.begin_time, '%Y-%m-%d %H:%M:%S')
-                    time_diff = int(options.interval[:-1]) * (
+                    begin_time = datetime.datetime.strptime(options['begin_time'], '%Y-%m-%d %H:%M:%S')
+                    time_diff = int(options['interval'][:-1]) * (
                                 calibrator.info_dictionary["number_of_previous_observations"] + 1)
-                    if options.interval[-1:] == 'T':
+                    if options['interval'][-1:] == 'T':
                         begin_time = begin_time - datetime.timedelta(minutes=time_diff)
                     else:
                         begin_time = begin_time - datetime.timedelta(hours=time_diff)
@@ -324,15 +326,15 @@ def main(args=None):
 
                 prediction = prediction.merge(frameApply.applyCalibrationSensorPollutantDillDf(calibrator
                                                                  , begin_time
-                                                                 , options.end_time
-                                                                 , options.id_sensor
-                                                                 , framework.getIntervalInMinutesFromString(options.interval)
+                                                                 , options['end_time']
+                                                                 , options['id_sensor']
+                                                                 , framework.getIntervalInMinutesFromString(options['interval'])
                                                                  , p
                                                                  ,
                                                                  True if (
-                                                                             options.do_persist_data.lower() == "true") else False
+                                                                             options['do_persist_data'].lower() == "true") else False
                                                                  ,path_dill
-                                                                 , options.anomaly),
+                                                                 , options['anomaly']),
 
 
                                       how='left', on='phenomenon_time',suffixes=('','_DROPME'))
@@ -346,7 +348,7 @@ def main(args=None):
         prediction['no2_out_of_range'] = False
         prediction['o3_out_of_range'] = False
 
-        sensor_feat=frameApply.getSensorFeat(options.id_sensor,options.end_time)
+        sensor_feat=frameApply.getSensorFeat(options['id_sensor'],options['end_time'])
         sensor_feat['datetime']=pd.to_datetime(sensor_feat['datetime'])
         prediction['id_sensor_low_cost_feature'] = prediction['phenomenon_time'].apply(lambda x:
                                                                                        int(sensor_feat[sensor_feat['datetime']<x]['id_sensor_low_cost_feature'][-1:]))
