@@ -1,0 +1,15 @@
+{
+  "id_sensor": 4011,
+  "begin_time": "2019-09-01 00:00:00",
+  "end_time": "2019-09-15 00:00:00",
+  "dill_file_name": "LSTM.dill",
+  "interval": "10T",
+  "csv_target_data": "input_target.csv",
+  "csv_feature_data": "input_raw.csv",
+  "feature_list": "no_we-no_aux",
+  "target_label": "label_no",
+  "number_of_previous_observations": 1,
+  "pollutant_label": "no",
+  "trainer_class_name": "Calib_LSTM_FunctionTrainer_001",
+  "trainer_module_name": "calib_LSTM_FunctionTrain"
+}
