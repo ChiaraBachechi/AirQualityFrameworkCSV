@@ -76,25 +76,24 @@ def addOptions():
 
 def optionsToInfo(options):
   status={}
-  status["dates"] = {'start': options.begin_time, 'end': options.end_time}
-  status['id_sensor'] = options.id_sensor
-  status['feat_order'] = options.feature_list.split('-')
-  status['label_list'] = options.label_list.split('-')
-  status['trainer_module_name'] = options.trainer_module_name
-  status['trainer_class_name'] = options.trainer_class_name
-  status['interval'] = options.interval
-  status['target_label'] = options.target_label
-  status['test_size'] = options.test_size
-  status['pollutant_label'] = options.pollutant_label
-  status['dill_file_name']=options.dill_file_name
-  status['csv_target_data']=options.csv_target_data
-  status['csv_feature_data']=options.csv_feature_data
-  status['label_list']=options.label_list
-  status['number_of_previous_observations'] =options.number_of_previous_observations
-  if (options.algorithm_parameters == ""):
+  status["dates"] = {'start': options['begin_time'], 'end': options['end_time']}
+  status['id_sensor'] = options['id_sensor']
+  status['feat_order'] = options['feature_list'].split('-')
+  status['trainer_module_name'] = options['trainer_module_name']
+  status['trainer_class_name'] = options['trainer_class_name']
+  status['interval'] = options['interval']
+  status['target_label'] = options['target_label']
+  status['test_size'] = options['test_size']
+  status['pollutant_label'] = options['pollutant_label']
+  status['dill_file_name'] = options['dill_file_name']
+  status['csv_target_data'] = options['csv_target_data']
+  status['csv_feature_data'] = options['csv_feature_data']
+  #status['label_list']= options['label_list']
+  status['number_of_previous_observations'] = options['number_of_previous_observations']
+  if (options['algorithm_parameters'] == ""):
       status['algorithm_parameters'] = {}
   else:
-      status['algorithm_parameters'] = json.load(options.algorithm_parameters)
+      status['algorithm_parameters'] = json.load(options['algorithm_parameters'])
   status['units_of_measure'] = {'no': {'unit_of_measure': 'ug/m^3', 'conversions': [{'from': 'ppb', 'factor': 1.25}]}, 'no2': {'unit_of_measure': 'ug/m^3', 'conversions': [{'from': 'ppb', 'factor': 1.912}]}, 'o3': {'unit_of_measure': 'ug/m^3', 'conversions': [{'from': 'ppb', 'factor': 2.0}]}, 'co': {'unit_of_measure': 'ug/m^3', 'conversions': [{'from': 'mg/m^3', 'factor': 1000}, {'from': 'ppm', 'factor': 1160}, {'from': 'ppb', 'factor': 1.16}]}}
 
   print(" --- optionsToInfo:\n", json.dumps(status, sort_keys=True, indent=2))
@@ -190,7 +189,7 @@ def getInfoFromDillFile(options):
     with open('../data/' +  options['dill_file_name'], 'rb') as dill_file:
             calibrator = dill.load(dill_file)
     info = json.dumps(calibrator.get_info(), sort_keys=True, indent=2)
-    with open('../results/' + options['dill_file_name'].spit('.')[0] + 'info.json', 'w') as outfile:
+    with open('../results/' + options['info_file_name'], 'w') as outfile:
         outfile.write(info)
     return
 def applyCalibrationSensorPollutantDillDf(options):
@@ -206,10 +205,10 @@ def applyCalibrationSensorPollutantDillDf(options):
             begin_time = begin_time - datetime.timedelta(hours=time_diff)
         begin_time=str(begin_time)
 
-    if(options['number_of_previous_observations']!=calibrator.info_dictionary["number_of_previous_observations"]):
+    if(options['number_of_previous_observations'] != calibrator.info_dictionary["number_of_previous_observations"]):
         print("The model was trained with number_of_previous_observations=",calibrator.info_dictionary["number_of_previous_observations"])
         return
-    if(list(options['feature_list'].split("-"))!=calibrator.info_dictionary["feat_order"]):
+    if(list(options['feature_list'].split("-")) != calibrator.info_dictionary["feat_order"]):
         print("Error: The feature of the model and the feature listed in the options are different.\
         The model was trained with these features:")
         print(str(calibrator.info_dictionary["feat_order"]))
@@ -245,11 +244,8 @@ def checkOptions(options):
 def main(args=None):
     #argParser = addOptions()
     #options = argParser.parse_args(args=args)
-    
-
     with open('../data/config_train.json', 'r') as config_file:
         options = json.load(config_file)
-    
     checkOptions(options)
     trainAndSaveDillToFile(options)
     with open('../data/config_getInfo.json', 'r') as config_file:

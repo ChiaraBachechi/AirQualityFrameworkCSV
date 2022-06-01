@@ -144,6 +144,7 @@ def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
     info_dictionary[info_dictionary['pollutant_label']]['range'] = ['%.2f' % float(df_train_labels.min()), '%.2f' % float(df_train_labels.max())]
     [min(df_train_labels), max(df_train_labels)]
     info_dictionary[info_dictionary['pollutant_label']]['unit_of_measure'] = info_dictionary['units_of_measure'][info_dictionary['pollutant_label']]['unit_of_measure']
+    info_dictionary["test_size"] = info_dictionary['test_size']
 
 
 """

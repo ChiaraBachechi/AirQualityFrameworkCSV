@@ -200,6 +200,7 @@ def updateInfoData(info_dictionary, df_train_features, df_train_labels_full):
     #info_dictionary[l]
     info_dictionary['pollutant_unit_of_measure'] = \
     info_dictionary['units_of_measure'][info_dictionary['pollutant_label']]['unit_of_measure']
+    info_dictionary["test_size"] = info_dictionary['test_size']
 
 
 

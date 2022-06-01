@@ -1,4 +1,4 @@
 {
-  "info_file_name": "info_file.json",
-  "dill_file_name": "LSTM.dill"
+  "info_file_name": "info_LSTM.json",
+  "dill_file_name": "LSTM_2.dill"
 }

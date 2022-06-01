@@ -2,11 +2,11 @@
   "id_sensor": 4011,
   "begin_time": "2019-09-01 00:00:00",
   "end_time": "2019-09-15 00:00:00",
-  "dill_file_name": "LSTM.dill",
+  "dill_file_name": "LSTM_2.dill",
   "interval": "10T",
   "csv_feature_data": "input_raw.csv",
   "feature_list": "no_we-no_aux",
   "target_label": "no",
   "number_of_previous_observations": 1,
-  "csv_calibrated_data": "pappappero.csv"
+  "csv_calibrated_data": "LSTM.csv"
 }

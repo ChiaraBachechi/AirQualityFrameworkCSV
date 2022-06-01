@@ -11,5 +11,7 @@
   "number_of_previous_observations": 1,
   "pollutant_label": "no",
   "trainer_class_name": "Calib_LSTM_FunctionTrainer_001",
-  "trainer_module_name": "calib_LSTM_FunctionTrain"
+  "trainer_module_name": "calib_LSTM_FunctionTrain",
+  "test_size": "0.10",
+  "algorithm_parameters": ""
 }

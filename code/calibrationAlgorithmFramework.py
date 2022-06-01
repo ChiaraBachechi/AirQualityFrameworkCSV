@@ -51,7 +51,7 @@ class CalibrationAlgorithmFramework():
       self.target_label = info['target_label']
       self.trainer_module_name = info["trainer_module_name"]
       self.trainer_class_name = info["trainer_class_name"]
-      #self.test_size = info['test_size']
+      self.test_size = info['test_size']
       self.pollutant_label = info['pollutant_label']
       self.interval = info['interval']
       self.number_of_previous_observations=info['number_of_previous_observations']
@@ -60,21 +60,19 @@ class CalibrationAlgorithmFramework():
       self.units_of_measure = info['units_of_measure']
       self.csv_feature_data = info['csv_feature_data']
       self.csv_target_data = info['csv_target_data']
-      self.label_list = info['label_list']
       
     def getStatus(self):
         status={}
         status["dates"]={ 'start': self.begin_time, 'end': self.end_time }
         status['id_sensor']=self.id_sensor
         status['feat_order']=self.features
-        status['label_list']=self.label_list
         status['target_label']=self.target_label
         status['csv_feature_data']=self.csv_feature_data
         status['csv_target_data'] = self.csv_target_data
         status['trainer_module_name']=self.trainer_module_name
         status['trainer_class_name']=self.trainer_class_name
         status['interval']=self.interval
-        #status['test_size']=self.test_size
+        status['test_size']=self.test_size
         status['pollutant_label']=self.pollutant_label
         status['interval']=self.interval
         status['number_of_previous_observations']=self.number_of_previous_observations
