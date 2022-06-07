@@ -1,0 +1,5 @@
+{
+  "csv_target_data": "input_target.csv",
+  "csv_calibrated_data": "pappappero.csv",
+  "pollutant_label": "no"
+}

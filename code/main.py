@@ -20,6 +20,7 @@ import datetime
 import calibrationAlgorithmTrainer_interfaces
 import calibrationAlgorithmFramework
 import calibrationApplyFramework
+import calibrationEvaluationFramework
 
 
 def addOptions():
@@ -239,27 +240,41 @@ def checkOptions(options):
         raise ValueError(
             options['interval'] + ' is not a valid interval. It should contain T (for minutes) or H (for hours).')
     return
-
+def evaluate(options):
+    framework = calibrationEvaluationFramework.CalibrationEvaluationFramework()
+    calibrated = pd.read_csv('../data/' + options['csv_calibrated_data'])
+    real =pd.read_csv('../data/' + options['csv_target_data'])
+    result = framework.evaluate(calibrated,real,options['pollutant_label'])
+    performance = json.dumps(result, sort_keys=True, indent=2)
+    with open('../results/performance.json', 'w') as outfile:
+        outfile.write(performance)
+    return
 
 def main(args=None):
     #argParser = addOptions()
     #options = argParser.parse_args(args=args)
     with open('../data/config_train.json', 'r') as config_file:
         options = json.load(config_file)
-    checkOptions(options)
+    """checkOptions(options)
+    #the model is generated from input and target data
     trainAndSaveDillToFile(options)
     with open('../data/config_getInfo.json', 'r') as config_file:
-        options = json.load(config_file)   
+        options = json.load(config_file)
+    #the information regarding the model are retrieved in a json file   
     getInfoFromDillFile(options)
     with open('../data/config_fromInfo.json', 'r') as config_file:
         options = json.load(config_file) 
+    #the model is automatically re-generated from the json file
     trainAndSaveDillToFileFromInfo(options)
     with open('../data/config_apply.json', 'r') as config_file:
         options = json.load(config_file)
     checkOptions(options)
-    applyCalibrationSensorPollutantDillDf(options)
+    #the model is applied to input data to generate calibrated data
+    applyCalibrationSensorPollutantDillDf(options)"""
+    #evluate the results of the calibration comparing with the target values
+    with open('../data/config_evaluate.json', 'r') as config_file:
+        options = json.load(config_file)
+    evaluate(options)
     return
-
-
 
 main()
