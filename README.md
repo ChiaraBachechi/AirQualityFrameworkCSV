@@ -7,6 +7,11 @@ The framework is based on a data structure that can be generated in the PostgreS
 In order to set up the connecting with the database the file trafair_DB_config should be modified inserting in 'trafair_db_getConnection' the right password and database name.
 Alternatively, the framework can be used with 'csv' files but this is suggested only for teasting purpose since the user must take trace of all the changes in the sensor status, associate correctly the measurements of the sensors with the target measurements and compare the results of different approaches can be more difficult.
 
+Adaptability of the framework to other models and pollutants:
+To add a new calibration model, it is necessary to add a new class which implements the proper functions to train that algorithm and apply the obtained model following the before mentioned interface and taking as examples the algorithms we implemented (see the scripts named “calib_VR_SVR_FunctionTrain.py” and “calib_LSTM_FunctionTrain.py”).   
+
+Using the parameters trainer_class_name and trainer_module_name, the name of the class containing the training function needs to be specified when generating the dill of the corresponding model.
+
 There are several actions that can be performed:
 - trainAndSaveDillToFile: this action performs the training of the given model on the given period of time and create a dill file that is saved locally.
 - trainToDB: this action performs the training of the given model on the given period of time and create a dill file saved locally and generate the instace of the new                model in the postgreSQL database.
